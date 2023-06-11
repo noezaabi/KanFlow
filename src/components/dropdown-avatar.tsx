@@ -132,12 +132,6 @@ export function DropdownAvatar() {
       </DropdownMenuContent>
     </DropdownMenu>
   ) : (
-    <Button
-      onClick={() => {
-        void signIn();
-      }}
-    >
-      Login
-    </Button>
+    <Avatar></Avatar>
   );
 }

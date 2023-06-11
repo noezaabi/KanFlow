@@ -5,13 +5,15 @@ import {
   protectedProcedure,
 } from "~/server/api/trpc";
 
-export const exampleRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
+export const boardRouter = createTRPCRouter({
+  getBoardByUserId: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(({ input, ctx }) => {
+      return ctx.prisma.board.findMany({
+        where: {
+          userId: input.userId,
+        },
+      });
     }),
 
   getAll: publicProcedure.query(({ ctx }) => {
