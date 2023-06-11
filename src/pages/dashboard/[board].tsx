@@ -5,27 +5,31 @@ import { ReactElement } from "react";
 import { GetServerSideProps } from "next";
 import { getServerAuthSession } from "~/server/auth";
 import DashboardLayout from "~/components/layouts/dashboard-layout";
+import { useRouter } from "next/router";
 
-Roadmap.getLayout = function getLayout(page: ReactElement) {
+Board.getLayout = function getLayout(page: ReactElement) {
+  const router = useRouter();
+
   return (
     <>
       <Head>
-        <title>Roadmap</title>
+        <title>{`Kanflow - ${router.query.board} Board`}</title>
       </Head>
       <main className="flex h-screen w-screen ">
-        <DashboardLayout route="/roadmap">page</DashboardLayout>
+        <DashboardLayout route={`${router.query.board}`}>page</DashboardLayout>
         {page}
       </main>
     </>
   );
 };
 
-export default function Roadmap() {
+export default function Board() {
+  const router = useRouter();
   return (
     <>
       <div className="flex w-screen flex-col">
         <div className="flex h-24 w-full items-center justify-between border-b bg-white p-7">
-          <h1 className="heading-xl">Roadmap</h1>
+          <h1 className="heading-xl">{router.query.board}</h1>
 
           <div className="flex gap-4">
             <Button>+ Add New Task</Button>

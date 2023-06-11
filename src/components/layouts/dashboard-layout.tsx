@@ -8,6 +8,7 @@ interface Props {
 }
 
 const DashboardLayout: React.FC<Props> = ({ route, children }) => {
+  console.log(route);
   return (
     <div className="hidden h-screen flex-col justify-between border-r bg-white py-8 md:flex md:w-80">
       <div className=" ">
