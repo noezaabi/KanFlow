@@ -1,10 +1,16 @@
-import { type NextPage } from "next";
+import {
+  GetServerSideProps,
+  GetServerSidePropsContext,
+  type NextPage,
+} from "next";
+import { getServerSession } from "next-auth";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { DropdownAvatar } from "~/components/dropdown-avatar";
 import { Button } from "~/components/ui/button";
 import { DarkModeSwitch } from "~/components/ui/switch";
+import { authOptions, getServerAuthSession } from "~/server/auth";
 import { api } from "~/utils/api";
 
 const BoardOption = (props: { isActive: boolean; boardName: string }) => {
@@ -178,3 +184,15 @@ const AuthShowcase: React.FC = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (!session) {
+    return { redirect: { destination: "/auth/signin" } };
+  }
+
+  return {
+    props: {},
+  };
+}
