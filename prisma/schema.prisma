@@ -65,3 +65,46 @@ model VerificationToken {
 
     @@unique([identifier, token])
 }
+
+// // Create a database schema for the kaban board that will contain the different columns and kanban tasks
+// model Board {
+//     id        String   @id @default(cuid())
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+//     title     String
+//     columns   Column[]
+// }
+
+// // Create a database schema for the columns that will contain the different kanban tasks and a unique color
+// model Column {
+//     id        String   @id @default(cuid())
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+//     title     String
+//     color     String
+//     tasks     Task[]
+//     board     Board    @relation(fields: [boardId], references: [id])
+//     boardId   String
+// }
+
+// // Create a database schema for the kanban tasks that will contain a title, a decription and one to three subtasks
+// model Task {
+//     id          String   @id @default(cuid())
+//     createdAt   DateTime @default(now())
+//     updatedAt   DateTime @updatedAt
+//     title       String
+//     description String
+//     subtasks    Subtask[]
+//     column      Column   @relation(fields: [columnId], references: [id])
+//     columnId    String
+// }
+
+// model Subtask {
+//     id        String   @id @default(cuid())
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+//     title     String
+//     task      Task     @relation(fields: [taskId], references: [id])
+//     taskId    String
+//     done      Boolean  @default(false)
+// }
