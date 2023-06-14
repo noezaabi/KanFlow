@@ -45,13 +45,13 @@ export function DropdownAvatar() {
                 ? sessionData.user.image
                 : "https://github.com/shadcn.png"
             }
-            alt="@shadcn"
+            alt="User profile picture"
           />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>{`My Account : ${sessionData.user.name}`}</DropdownMenuLabel>
+        <DropdownMenuLabel>{`Loged in as : ${sessionData.user.name}`}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>

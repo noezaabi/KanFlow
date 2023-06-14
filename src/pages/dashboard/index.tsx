@@ -13,8 +13,7 @@ Dashboard.getLayout = function getLayout(page: ReactElement) {
         <title>Inbox</title>
       </Head>
       <main className="flex h-screen w-screen ">
-        <DashboardLayout route="/">page</DashboardLayout>
-        {page}
+        <DashboardLayout route="/">{page}</DashboardLayout>
       </main>
     </>
   );
@@ -25,14 +24,19 @@ export default function Dashboard() {
     <>
       <div className="flex w-screen flex-col">
         <div className="flex h-24 w-full items-center justify-between border-b bg-white p-7">
-          <h1 className="heading-xl">Platform Launch</h1>
+          <div></div>
 
           <div className="flex gap-4">
             <Button>+ Add New Task</Button>
             <DropdownAvatar />
           </div>
         </div>
-        <div className="flex h-screen flex-col items-center justify-center bg-red-400"></div>
+        <div className="flex h-screen flex-col items-center justify-center">
+          <h1 className="heading-xl">Welcome back !</h1>
+          <h2 className="heading-l text-medgray">
+            Select the project you would like to work with to get started...
+          </h2>
+        </div>
       </div>
     </>
   );

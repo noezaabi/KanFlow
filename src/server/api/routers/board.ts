@@ -13,14 +13,19 @@ export const boardRouter = createTRPCRouter({
         where: {
           userId: input.userId,
         },
+        orderBy: {
+          createdAt: "desc",
+        },
       });
     }),
 
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
-  }),
-
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
-  }),
+  getBoardById: protectedProcedure
+    .input(z.object({ boardId: z.string() }))
+    .query(({ input, ctx }) => {
+      return ctx.prisma.board.findUnique({
+        where: {
+          id: input.boardId,
+        },
+      });
+    }),
 });

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { DarkModeSwitch } from "../ui/switch";
+import { useSession } from "next-auth/react";
+import { api } from "~/utils/api";
 
 interface Props {
   route: string;
@@ -8,103 +10,87 @@ interface Props {
 }
 
 const DashboardLayout: React.FC<Props> = ({ route, children }) => {
+  const session = useSession();
+
   console.log(route);
+
+  const Boards = api.board.getBoardByUserId.useQuery({
+    userId: session.data?.user.id || "",
+  });
+
   return (
-    <div className="hidden h-screen flex-col justify-between border-r bg-white py-8 md:flex md:w-80">
-      <div className=" ">
-        <Image
-          src="/images/kanban-logo.svg"
-          alt="KanFlow Logo"
-          width={150}
-          height={25}
-          className="pl-8"
-        />
-        <div className="pt-14">
-          <p className="heading-sm pl-8">ALL BOARDS (3)</p>
-          <div className="mt-5 flex flex-col">
-            <BoardOption
-              isActive={route === "platform-launch"}
-              boardName="Platform Launch"
-              link="/dashboard/platform-launch"
+    <div className="flex w-screen">
+      <div className="hidden h-screen flex-col justify-between border-r bg-white py-8 md:flex md:w-80">
+        <div className=" ">
+          <Link href="/dashboard">
+            <Image
+              src="/images/kanban-logo.svg"
+              alt="KanFlow Logo"
+              width={150}
+              height={25}
+              className="pl-8"
             />
-            <BoardOption
-              isActive={route === "marketing-plan"}
-              boardName="Marketing Plan"
-              link="/dashboard/marketing-plan"
-            />
-            <BoardOption
-              isActive={route === "roadmap"}
-              boardName="Roadmap"
-              link="/dashboard/roadmap"
-            />
-            <AddBoard />
+          </Link>
+
+          <div className="pt-14">
+            <p className="heading-sm pl-8">ALL BOARDS (3)</p>
+            <div className="mt-5 flex flex-col">
+              {Boards.data?.map((board) => (
+                <BoardOption
+                  isActive={route === board.id}
+                  boardName={board.title}
+                  link={`/dashboard/${board.id}`}
+                />
+              ))}
+              {/* <BoardOption
+                isActive={route === "platform-launch"}
+                boardName="Platform Launch"
+                link="/dashboard/platform-launch"
+              />
+              <BoardOption
+                isActive={route === "marketing-plan"}
+                boardName="Marketing Plan"
+                link="/dashboard/marketing-plan"
+              />
+              <BoardOption
+                isActive={route === "roadmap"}
+                boardName="Roadmap"
+                link="/dashboard/roadmap"
+              /> */}
+              <AddBoard />
+            </div>
           </div>
         </div>
-      </div>
-      <div className="mx-6 flex flex-col">
-        <div className=" flex justify-center gap-6 rounded-md bg-background py-4">
-          <Image
-            src="/images/sun.svg"
-            alt="Light mode indicator"
-            width={20}
-            height={20}
-          />
-          <DarkModeSwitch />
-          <Image
-            src="/images/moon.svg"
-            alt="Dark mode indicator"
-            width={20}
-            height={20}
-          />
+        <div className="mx-6 flex flex-col">
+          <div className=" flex justify-center gap-6 rounded-md bg-background py-4">
+            <Image
+              src="/images/sun.svg"
+              alt="Light mode indicator"
+              width={20}
+              height={20}
+            />
+            <DarkModeSwitch />
+            <Image
+              src="/images/moon.svg"
+              alt="Dark mode indicator"
+              width={20}
+              height={20}
+            />
+          </div>
+          <button className="mt-2 flex gap-2 py-4 hover:underline">
+            <Image
+              src="/images/eye-slash.svg"
+              alt="Hide icon"
+              width={20}
+              height={20}
+            />
+            <p className={"heading-m text-medgray"}> Hide Sidebar</p>
+          </button>
         </div>
-        <button className="mt-2 flex gap-2 py-4 hover:underline">
-          <Image
-            src="/images/eye-slash.svg"
-            alt="Hide icon"
-            width={20}
-            height={20}
-          />
-          <p className={"heading-m text-medgray"}> Hide Sidebar</p>
-        </button>
       </div>
+      {children}
     </div>
   );
-  //   return (
-  //     <div className="space-y-2">
-  //       <Tabs value={route}>
-  //         <div className="space-y-2 z-0">
-  //           <TabsList>
-  //             <Link href={AUTH_ROUTES.ADMIN.INBOX}>
-  //               <TabsTrigger value={AUTH_ROUTES.ADMIN.INBOX}>Inbox</TabsTrigger>
-  //             </Link>
-  //             <Link href={AUTH_ROUTES.ADMIN.PATIENTS}>
-  //               <TabsTrigger value={AUTH_ROUTES.ADMIN.PATIENTS}>
-  //                 Patients
-  //               </TabsTrigger>
-  //             </Link>
-  //             <Link href={AUTH_ROUTES.ADMIN.DOCTORS}>
-  //               <TabsTrigger value={AUTH_ROUTES.ADMIN.DOCTORS}>
-  //                 Doctors
-  //               </TabsTrigger>
-  //             </Link>
-  //             <Link href={AUTH_ROUTES.ADMIN.EVENTS}>
-  //               <TabsTrigger value={AUTH_ROUTES.ADMIN.EVENTS}>Events</TabsTrigger>
-  //             </Link>
-  //             <Link href={AUTH_ROUTES.ADMIN.SETTINGS}>
-  //               <TabsTrigger value={AUTH_ROUTES.ADMIN.SETTINGS}>
-  //                 Settings
-  //               </TabsTrigger>
-  //             </Link>
-  //           </TabsList>
-  //           <TabsContent value={route}>
-  //             <div className="mx-auto max-w-[2520px] px-5 md:px-10">
-  //               {children}
-  //             </div>
-  //           </TabsContent>
-  //         </div>
-  //       </Tabs>
-  //     </div>
-  //   );
 };
 
 const AddBoard = () => {
@@ -143,7 +129,7 @@ const BoardOption = (props: {
   return (
     <Link href={link}>
       <div
-        className={`mr-6 flex rounded-r-full   ${
+        className={`mr-6 flex rounded-r-full ${
           isActive ? "bg-primary" : "bg-white hover:bg-slate-100"
         } py-4`}
       >
