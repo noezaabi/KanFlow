@@ -3,6 +3,8 @@ import Image from "next/image";
 import { DarkModeSwitch } from "../ui/switch";
 import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
+import { useDisclosure } from "~/hooks/useDisclosure";
+import { CreateBoardDialog } from "../dialog/CreateBoardDialog";
 
 interface Props {
   route: string;
@@ -11,17 +13,16 @@ interface Props {
 
 const DashboardLayout: React.FC<Props> = ({ route, children }) => {
   const session = useSession();
-
-  console.log(route);
+  const { isOpen, onToggle } = useDisclosure();
 
   const Boards = api.board.getBoardByUserId.useQuery({
     userId: session.data?.user.id || "",
   });
 
   return (
-    <div className="flex w-screen">
-      <div className="hidden h-screen flex-col justify-between border-r bg-white py-8 md:flex md:w-80">
-        <div className=" ">
+    <main className="grid w-screen grid-cols-5 ">
+      <div className="col-span-1 hidden h-screen flex-col justify-between border-r bg-white py-8 md:flex">
+        <div className="">
           <Link href="/dashboard">
             <Image
               src="/images/kanban-logo.svg"
@@ -33,10 +34,15 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
           </Link>
 
           <div className="pt-14">
-            <p className="heading-sm pl-8">ALL BOARDS (3)</p>
+            <p className="heading-sm pl-8">
+              {Boards.data?.length
+                ? `ALL BOARDS (${Boards.data?.length})`
+                : `ALL BOARDS`}
+            </p>
             <div className="mt-5 flex flex-col">
               {Boards.data?.map((board) => (
                 <BoardOption
+                  key={board.id}
                   isActive={route === board.id}
                   boardName={board.title}
                   link={`/dashboard/${board.id}`}
@@ -57,7 +63,37 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
                 boardName="Roadmap"
                 link="/dashboard/roadmap"
               /> */}
-              <AddBoard />
+
+              <CreateBoardDialog isOpen={isOpen} onToggle={onToggle} />
+
+              <button
+                onClick={() => {
+                  onToggle();
+                }}
+                className={
+                  "mr-6 flex rounded-r-full bg-white py-4 hover:bg-slate-100"
+                }
+              >
+                <svg
+                  className="ml-8 mt-0.5"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M0.846133 0.846133C0.304363 1.3879 0 2.12271 0 2.88889V13.1111C0 13.8773 0.304363 14.6121 0.846133 15.1538C1.3879 15.6957 2.12271 16 2.88889 16H13.1111C13.8773 16 14.6121 15.6957 15.1538 15.1538C15.6957 14.6121 16 13.8773 16 13.1111V2.88889C16 2.12271 15.6957 1.3879 15.1538 0.846133C14.6121 0.304363 13.8773 0 13.1111 0H2.88889C2.12271 0 1.3879 0.304363 0.846133 0.846133ZM1.33333 13.1111V8.44448H9.77781V14.6667H2.88889C2.03022 14.6667 1.33333 13.9698 1.33333 13.1111ZM9.77781 7.11111V1.33333H2.88889C2.47633 1.33333 2.08067 1.49723 1.78895 1.78895C1.49723 2.08067 1.33333 2.47633 1.33333 2.88889V7.11111H9.77781ZM11.1111 5.77778H14.6667V10.2222H11.1111V5.77778ZM14.6667 11.5555H11.1111V14.6667H13.1111C13.5236 14.6667 13.9194 14.5028 14.2111 14.2111C14.5028 13.9194 14.6667 13.5236 14.6667 13.1111V11.5555ZM14.6667 2.88889V4.44445H11.1111V1.33333H13.1111C13.5236 1.33333 13.9194 1.49723 14.2111 1.78895C14.5028 2.08067 14.6667 2.47633 14.6667 2.88889Z"
+                    fill="#635FC7"
+                  />
+                </svg>
+
+                <p className={"heading-m ml-4 text-purple"}>
+                  + Create New Board
+                </p>
+              </button>
             </div>
           </div>
         </div>
@@ -77,6 +113,7 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
               height={20}
             />
           </div>
+
           <button className="mt-2 flex gap-2 py-4 hover:underline">
             <Image
               src="/images/eye-slash.svg"
@@ -89,33 +126,7 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
         </div>
       </div>
       {children}
-    </div>
-  );
-};
-
-const AddBoard = () => {
-  return (
-    <button
-      className={"mr-6 flex rounded-r-full bg-white py-4 hover:bg-slate-100"}
-    >
-      <svg
-        className="ml-8 mt-0.5"
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
-          d="M0.846133 0.846133C0.304363 1.3879 0 2.12271 0 2.88889V13.1111C0 13.8773 0.304363 14.6121 0.846133 15.1538C1.3879 15.6957 2.12271 16 2.88889 16H13.1111C13.8773 16 14.6121 15.6957 15.1538 15.1538C15.6957 14.6121 16 13.8773 16 13.1111V2.88889C16 2.12271 15.6957 1.3879 15.1538 0.846133C14.6121 0.304363 13.8773 0 13.1111 0H2.88889C2.12271 0 1.3879 0.304363 0.846133 0.846133ZM1.33333 13.1111V8.44448H9.77781V14.6667H2.88889C2.03022 14.6667 1.33333 13.9698 1.33333 13.1111ZM9.77781 7.11111V1.33333H2.88889C2.47633 1.33333 2.08067 1.49723 1.78895 1.78895C1.49723 2.08067 1.33333 2.47633 1.33333 2.88889V7.11111H9.77781ZM11.1111 5.77778H14.6667V10.2222H11.1111V5.77778ZM14.6667 11.5555H11.1111V14.6667H13.1111C13.5236 14.6667 13.9194 14.5028 14.2111 14.2111C14.5028 13.9194 14.6667 13.5236 14.6667 13.1111V11.5555ZM14.6667 2.88889V4.44445H11.1111V1.33333H13.1111C13.5236 1.33333 13.9194 1.49723 14.2111 1.78895C14.5028 2.08067 14.6667 2.47633 14.6667 2.88889Z"
-          fill="#635FC7"
-        />
-      </svg>
-
-      <p className={"heading-m ml-4 text-purple"}>+ Create New Board</p>
-    </button>
+    </main>
   );
 };
 
@@ -142,8 +153,8 @@ const BoardOption = (props: {
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
+            fillRule="evenodd"
+            clipRule="evenodd"
             d="M0.846133 0.846133C0.304363 1.3879 0 2.12271 0 2.88889V13.1111C0 13.8773 0.304363 14.6121 0.846133 15.1538C1.3879 15.6957 2.12271 16 2.88889 16H13.1111C13.8773 16 14.6121 15.6957 15.1538 15.1538C15.6957 14.6121 16 13.8773 16 13.1111V2.88889C16 2.12271 15.6957 1.3879 15.1538 0.846133C14.6121 0.304363 13.8773 0 13.1111 0H2.88889C2.12271 0 1.3879 0.304363 0.846133 0.846133ZM1.33333 13.1111V8.44448H9.77781V14.6667H2.88889C2.03022 14.6667 1.33333 13.9698 1.33333 13.1111ZM9.77781 7.11111V1.33333H2.88889C2.47633 1.33333 2.08067 1.49723 1.78895 1.78895C1.49723 2.08067 1.33333 2.47633 1.33333 2.88889V7.11111H9.77781ZM11.1111 5.77778H14.6667V10.2222H11.1111V5.77778ZM14.6667 11.5555H11.1111V14.6667H13.1111C13.5236 14.6667 13.9194 14.5028 14.2111 14.2111C14.5028 13.9194 14.6667 13.5236 14.6667 13.1111V11.5555ZM14.6667 2.88889V4.44445H11.1111V1.33333H13.1111C13.5236 1.33333 13.9194 1.49723 14.2111 1.78895C14.5028 2.08067 14.6667 2.47633 14.6667 2.88889Z"
             fill={isActive ? "white" : "#828FA3"}
           />

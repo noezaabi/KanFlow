@@ -13,6 +13,12 @@ export default {
       },
     },
     extend: {
+      gridTemplateRows: {
+        "11": "repeat(11, minmax(0, 1fr))",
+      },
+      gridRow: {
+        "span-10": "span 10 / span 10",
+      },
       colors: {
         medgray: "hsl(216 15% 57%)",
         purple: "hsl(242 48% 58%)",
