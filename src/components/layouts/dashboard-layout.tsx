@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 import { useDisclosure } from "~/hooks/useDisclosure";
 import { CreateBoardDialog } from "../dialog/CreateBoardDialog";
+import { useTheme } from "next-themes";
 
 interface Props {
   route: string;
@@ -12,6 +13,8 @@ interface Props {
 }
 
 const DashboardLayout: React.FC<Props> = ({ route, children }) => {
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? systemTheme : theme;
   const session = useSession();
   const { isOpen, onToggle } = useDisclosure();
 
@@ -21,11 +24,15 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
 
   return (
     <main className="grid w-screen grid-cols-5 ">
-      <div className="col-span-1 hidden h-screen flex-col justify-between border-r bg-white py-8 md:flex">
+      <div className="col-span-1 hidden h-screen flex-col justify-between border-r bg-white py-8 dark:bg-darkgray md:flex">
         <div className="">
           <Link href="/dashboard">
             <Image
-              src="/images/kanban-logo.svg"
+              src={
+                currentTheme === "light"
+                  ? "/images/kanban-logo.svg"
+                  : "/images/kanban-logo-dark.svg"
+              }
               alt="KanFlow Logo"
               width={150}
               height={25}
@@ -71,7 +78,7 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
                   onToggle();
                 }}
                 className={
-                  "mr-6 flex rounded-r-full bg-white py-4 hover:bg-slate-100"
+                  "mr-6 flex rounded-r-full bg-white py-4 hover:bg-slate-100 dark:bg-darkgray"
                 }
               >
                 <svg
@@ -105,7 +112,12 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
               width={20}
               height={20}
             />
-            <DarkModeSwitch />
+            <DarkModeSwitch
+              checked={theme === "dark"}
+              onClick={() =>
+                theme == "dark" ? setTheme("light") : setTheme("dark")
+              }
+            />
             <Image
               src="/images/moon.svg"
               alt="Dark mode indicator"
@@ -141,7 +153,9 @@ const BoardOption = (props: {
     <Link href={link}>
       <div
         className={`mr-6 flex rounded-r-full ${
-          isActive ? "bg-primary" : "bg-white hover:bg-slate-100"
+          isActive
+            ? "bg-primary"
+            : "bg-white hover:bg-slate-100 dark:bg-darkgray"
         } py-4`}
       >
         <svg

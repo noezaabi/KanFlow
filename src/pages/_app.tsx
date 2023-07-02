@@ -6,8 +6,9 @@ import "~/styles/globals.css";
 
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { NextComponentType, NextPage } from "next";
-import { ReactElement, ReactNode } from "react";
+import { ReactElement, ReactNode, useState } from "react";
 import { AppContextType, AppInitialProps } from "next/dist/shared/lib/utils";
+import { ThemeProvider } from "next-themes";
 
 const pjs = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
@@ -31,11 +32,13 @@ const MyApp: AppTypeWithLayout<{ session: Session | null }> = ({
 }) => {
   const getLayout = Component.getLayout || ((page) => page);
   return (
-    <main className={pjs.className}>
-      <SessionProvider session={session}>
-        {getLayout(<Component {...pageProps} />)}
-      </SessionProvider>
-    </main>
+    <ThemeProvider attribute="class">
+      <main className={pjs.className}>
+        <SessionProvider session={session}>
+          {getLayout(<Component {...pageProps} />)}
+        </SessionProvider>
+      </main>
+    </ThemeProvider>
   );
 };
 

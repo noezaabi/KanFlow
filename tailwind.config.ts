@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 const { fontFamily } = require("tailwindcss/defaultTheme");
 
 export default {
-  darkMode: ["class"],
+  darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     container: {
@@ -21,6 +21,7 @@ export default {
       },
       colors: {
         medgray: "hsl(216 15% 57%)",
+        darkgray: "hsl(235, 12%, 19%)",
         purple: "hsl(242 48% 58%)",
         violet: "hsl(243 100% 82%)",
         border: "hsl(var(--border))",

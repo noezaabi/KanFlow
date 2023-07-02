@@ -64,8 +64,8 @@ export default function Board(props: { boardId: string }) {
 
   return (
     <div className="col-span-4 grid h-screen grid-rows-11">
-      <div className="row-span-1 flex items-center justify-between border-b bg-white p-7">
-        <h1 className="heading-xl">{data.title}</h1>
+      <div className="row-span-1 flex items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
+        <h1 className="heading-xl dark:text-white">{data.title}</h1>
         <div className="flex gap-4">
           <Button
             onClick={() => {
