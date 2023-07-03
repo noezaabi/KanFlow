@@ -3,6 +3,7 @@ import {
   createBoardFormSchema,
   createColumnFormSchema,
   createTaskFormSchema,
+  updateTaskFormSchema,
 } from "~/const/form-validation-schema";
 import {
   createTRPCRouter,
@@ -69,23 +70,10 @@ export const boardRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // get the max order of the tasks in the column
-      const maxOrderItem = await ctx.prisma.task.findFirst({
-        where: {
-          columnId: input.task.columnId,
-        },
-        orderBy: {
-          order: "desc",
-        },
-      });
-      // set the order of the new task to the max order + 1
-      const newOrder = maxOrderItem ? maxOrderItem.order + 1 : 1;
-
       const board = await ctx.prisma.task.create({
         data: {
           title: input.task.title,
           description: input.task.description,
-          order: newOrder,
           column: {
             connect: {
               id: input.task.columnId,
@@ -97,6 +85,48 @@ export const boardRouter = createTRPCRouter({
               done: false,
             })),
           },
+        },
+      });
+    }),
+
+  // updateTask using the input updateTaskFormSchema and a boardId
+  updateTask: protectedProcedure
+    .input(
+      z.object({
+        task: updateTaskFormSchema,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const board = await ctx.prisma.task.update({
+        where: {
+          id: input.task.id,
+        },
+        data: {
+          title: input.task.title,
+          description: input.task.description,
+          columnId: input.task.columnId,
+        },
+      });
+    }),
+
+  updateSubtask: protectedProcedure
+    .input(
+      z.object({
+        subtask: z.object({
+          id: z.string(),
+          title: z.string(),
+          done: z.boolean(),
+        }),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const board = await ctx.prisma.subtask.update({
+        where: {
+          id: input.subtask.id,
+        },
+        data: {
+          title: input.subtask.title,
+          done: input.subtask.done,
         },
       });
     }),
@@ -125,13 +155,17 @@ export const boardRouter = createTRPCRouter({
         },
         include: {
           columns: {
+            orderBy: {
+              createdAt: "asc",
+            },
             include: {
               tasks: {
-                orderBy: {
-                  order: "asc",
-                },
                 include: {
-                  subtasks: true,
+                  subtasks: {
+                    orderBy: {
+                      createdAt: "asc",
+                    },
+                  },
                 },
               },
             },

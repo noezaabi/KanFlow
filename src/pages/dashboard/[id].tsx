@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { ReactElement, useContext } from "react";
+import { ReactElement, useContext, useState } from "react";
 import { CreateColumnDialog } from "~/components/dialog/CreateColumnDialog";
 import { CreateTaskDialog } from "~/components/dialog/CreateTaskDialog";
 import { DropdownAvatar } from "~/components/dropdown-avatar";
@@ -18,6 +18,9 @@ import { useDisclosure } from "~/hooks/useDisclosure";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/utils/api";
 import { SidebarContext } from "~/components/layouts/dashboard-layout";
+import { TaskDialog } from "~/components/dialog/TaskDialog";
+import { Subtask, Task } from "@prisma/client";
+import { set } from "zod";
 
 Board.getLayout = function getLayout(page: ReactElement) {
   return (
@@ -33,7 +36,31 @@ Board.getLayout = function getLayout(page: ReactElement) {
 export default function Board(props: { boardId: string }) {
   const { boardId } = props;
   const { isOpen: isOpenColumn, onToggle: onToggleColumn } = useDisclosure();
+  const { isOpen: isOpenCreateTask, onToggle: onToggleCreateTask } =
+    useDisclosure();
   const { isOpen: isOpenTask, onToggle: onToggleTask } = useDisclosure();
+  const [taskDialogData, setTaskDialogData] = useState<
+    Task & {
+      subtasks: Subtask[];
+    }
+  >({
+    id: "1",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    title: "Task 1",
+    description: "Task 1 description",
+    columnId: "1",
+    subtasks: [
+      {
+        id: "1",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        title: "Subtask 1",
+        done: false,
+        taskId: "1",
+      },
+    ],
+  });
   const isSideBarCollapsed = useContext(SidebarContext);
 
   const { data, isLoading } = api.board.getBoardById.useQuery({
@@ -62,6 +89,8 @@ export default function Board(props: { boardId: string }) {
     return <div>Board not found</div>;
   }
 
+  // loop over columns
+
   return (
     <div
       className={`grid h-screen grid-rows-11 ${
@@ -73,7 +102,7 @@ export default function Board(props: { boardId: string }) {
         <div className="flex gap-4">
           <Button
             onClick={() => {
-              onToggleTask();
+              onToggleCreateTask();
             }}
           >
             + Add New Task
@@ -94,7 +123,14 @@ export default function Board(props: { boardId: string }) {
             </div>
             <div className="mt-6 flex flex-col gap-5">
               {col.tasks.map((task, index) => (
-                <Card key={task.id} className="shadow-md">
+                <Card
+                  key={task.id}
+                  className="cursor-pointer shadow-md"
+                  onClick={() => {
+                    setTaskDialogData(task);
+                    onToggleTask();
+                  }}
+                >
                   <CardHeader>
                     <CardTitle>{task.title}</CardTitle>
                     <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
@@ -133,16 +169,24 @@ export default function Board(props: { boardId: string }) {
             + Add Column
           </h1>
         </Card>
-
         <CreateColumnDialog
           isOpen={isOpenColumn}
           onToggle={onToggleColumn}
           boardId={data.id}
         />
         <CreateTaskDialog
+          isOpen={isOpenCreateTask}
+          onToggle={onToggleCreateTask}
+          boardData={data}
+        />
+        <TaskDialog
           isOpen={isOpenTask}
           onToggle={onToggleTask}
-          boardData={data}
+          task={taskDialogData}
+          columns={data.columns.map((col) => ({
+            id: col.id,
+            title: col.title,
+          }))}
         />
       </div>
     </div>

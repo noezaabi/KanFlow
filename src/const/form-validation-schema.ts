@@ -26,6 +26,13 @@ export const createTaskFormSchema = z.object({
   ),
 });
 
+export const updateTaskFormSchema = z.object({
+  id: z.string().nonempty({ message: "A task id is required." }),
+  title: z.string().nonempty({ message: "A title is required." }),
+  description: z.string(),
+  columnId: z.string().nonempty({ message: "A column is required." }),
+});
+
 // model Task {
 //   id          String   @id @default(cuid())
 //   createdAt   DateTime @default(now())

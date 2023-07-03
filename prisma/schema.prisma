@@ -97,12 +97,12 @@ model Task {
     updatedAt   DateTime @updatedAt
     title       String
     description String
-    order       Int
     subtasks    Subtask[]
     column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
     columnId    String
 }
 
+// Create a database schema for the subtasks that will contain a title and a boolean to check if the subtask is done
 model Subtask {
     id        String   @id @default(cuid())
     createdAt DateTime @default(now())
