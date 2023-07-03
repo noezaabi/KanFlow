@@ -15,7 +15,7 @@ Dashboard.getLayout = function getLayout(page: ReactElement) {
         <title>Inbox</title>
       </Head>
       <main className="flex h-screen w-screen ">
-        <DashboardLayout route="/">{page}</DashboardLayout>
+        <DashboardLayout>{page}</DashboardLayout>
       </main>
     </>
   );
