@@ -1,10 +1,12 @@
 import Head from "next/head";
 import { Button } from "~/components/ui/button";
 import { DropdownAvatar } from "~/components/dropdown-avatar";
-import { ReactElement } from "react";
+import { ReactElement, useContext } from "react";
 import { GetServerSideProps } from "next";
 import { getServerAuthSession } from "~/server/auth";
-import DashboardLayout from "~/components/layouts/dashboard-layout";
+import DashboardLayout, {
+  SidebarContext,
+} from "~/components/layouts/dashboard-layout";
 
 Dashboard.getLayout = function getLayout(page: ReactElement) {
   return (
@@ -20,25 +22,26 @@ Dashboard.getLayout = function getLayout(page: ReactElement) {
 };
 
 export default function Dashboard() {
+  const isSideBarCollapsed = useContext(SidebarContext);
   return (
-    <>
-      <div className="flex w-screen flex-col">
-        <div className="flex h-24 w-full items-center justify-between border-b bg-white p-7">
-          <div></div>
-
-          <div className="flex gap-4">
-            <Button>+ Add New Task</Button>
-            <DropdownAvatar />
-          </div>
-        </div>
-        <div className="flex h-screen flex-col items-center justify-center">
-          <h1 className="heading-xl">Welcome back !</h1>
-          <h2 className="heading-l text-medgray">
-            Select the project you would like to work with to get started...
-          </h2>
+    <div
+      className={`grid h-screen grid-rows-11 ${
+        isSideBarCollapsed ? "col-span-5" : "col-span-4"
+      }`}
+    >
+      <div className="row-span-1 flex items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
+        <div></div>
+        <div className="flex gap-4">
+          <DropdownAvatar />
         </div>
       </div>
-    </>
+      <div className="row-span-10  flex flex-col items-center justify-center overflow-auto overscroll-none p-6">
+        <h1 className="heading-xl">Welcome back !</h1>
+        <h2 className="heading-l text-medgray">
+          Select the project you would like to work with to get started...
+        </h2>
+      </div>
+    </div>
   );
 }
 
