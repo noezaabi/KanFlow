@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { ReactElement } from "react";
+import { ReactElement, useContext } from "react";
 import { CreateColumnDialog } from "~/components/dialog/CreateColumnDialog";
 import { CreateTaskDialog } from "~/components/dialog/CreateTaskDialog";
 import { DropdownAvatar } from "~/components/dropdown-avatar";
@@ -17,6 +17,7 @@ import {
 import { useDisclosure } from "~/hooks/useDisclosure";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/utils/api";
+import { SidebarContext } from "~/components/layouts/dashboard-layout";
 
 Board.getLayout = function getLayout(page: ReactElement) {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function Board(props: { boardId: string }) {
   const { boardId } = props;
   const { isOpen: isOpenColumn, onToggle: onToggleColumn } = useDisclosure();
   const { isOpen: isOpenTask, onToggle: onToggleTask } = useDisclosure();
+  const isSideBarCollapsed = useContext(SidebarContext);
 
   const { data, isLoading } = api.board.getBoardById.useQuery({
     boardId: boardId,
@@ -43,7 +45,7 @@ export default function Board(props: { boardId: string }) {
   if (isLoading) {
     return (
       <div className="flex w-screen flex-col">
-        <div className="flex h-24 w-full items-center justify-between border-b bg-white p-7">
+        <div className="flex h-24 w-full items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
           {/* <Skeleton className="w-10h-4 h-6 w-96" /> */}
           <div></div>
           <div className="flex gap-4">
@@ -63,7 +65,11 @@ export default function Board(props: { boardId: string }) {
   }
 
   return (
-    <div className="col-span-4 grid h-screen grid-rows-11">
+    <div
+      className={`grid h-screen grid-rows-11 ${
+        isSideBarCollapsed ? "col-span-5" : "col-span-4"
+      }`}
+    >
       <div className="row-span-1 flex items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
         <h1 className="heading-xl dark:text-white">{data.title}</h1>
         <div className="flex gap-4">
