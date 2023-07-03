@@ -87,7 +87,14 @@ export const CreateTaskDialog: React.FC<Props> = ({
           <DialogTitle className="heading-lg">Add New Task</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={() => {
+              void (async () => {
+                await form.handleSubmit(onSubmit)();
+              })();
+            }}
+            className="space-y-5"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -172,7 +179,11 @@ export const CreateTaskDialog: React.FC<Props> = ({
                   <FormLabel>Status</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={() => {
+                        void (() => {
+                          field.onChange();
+                        })();
+                      }}
                       defaultValue={boardData.columns[0]?.id}
                     >
                       <FormControl>

@@ -7,12 +7,15 @@ import "~/styles/globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { NextComponentType, NextPage } from "next";
 import { ReactElement, ReactNode, useState } from "react";
-import { AppContextType, AppInitialProps } from "next/dist/shared/lib/utils";
+import type {
+  AppContextType,
+  AppInitialProps,
+} from "next/dist/shared/lib/utils";
 import { ThemeProvider } from "next-themes";
 
 const pjs = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
-export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
 

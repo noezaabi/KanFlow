@@ -45,5 +45,6 @@ const DarkModeSwitch = React.forwardRef<
     />
   </SwitchPrimitives.Root>
 ));
+DarkModeSwitch.displayName = SwitchPrimitives.Switch.displayName;
 
 export { Switch, DarkModeSwitch };

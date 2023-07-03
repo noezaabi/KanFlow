@@ -51,7 +51,12 @@ export function DropdownAvatar() {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>{`Loged in as : ${sessionData.user.name}`}</DropdownMenuLabel>
+        {sessionData.user.name ? (
+          <DropdownMenuLabel>{`Logged in as : ${sessionData.user.name}`}</DropdownMenuLabel>
+        ) : (
+          <DropdownMenuLabel>Logged in</DropdownMenuLabel>
+        )}
+
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>

@@ -53,7 +53,7 @@ export const CreateBoardDialog: React.FC<Props> = ({ isOpen, onToggle }) => {
     control: form.control,
   });
 
-  function onSubmit(values: z.infer<typeof createBoardFormSchema>) {
+  function onSubmit(values: z.infer<typeof createBoardFormSchema>): void {
     addBoard(values);
     form.reset();
   }
@@ -65,7 +65,14 @@ export const CreateBoardDialog: React.FC<Props> = ({ isOpen, onToggle }) => {
           <DialogTitle className="heading-lg">Add New Board</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={() => {
+              void (async () => {
+                await form.handleSubmit(onSubmit)();
+              })();
+            }}
+            className="space-y-5"
+          >
             <FormField
               control={form.control}
               name="title"

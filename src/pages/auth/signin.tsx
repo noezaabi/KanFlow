@@ -17,7 +17,7 @@ export default function SignIn({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  async function onSubmit(event: React.SyntheticEvent) {
+  function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
 
@@ -84,7 +84,13 @@ export default function SignIn({
               </p>
             </div>
             <div className={cn("grid gap-6")}>
-              <form onSubmit={onSubmit}>
+              <form
+                onSubmit={() => {
+                  void (() => {
+                    onSubmit;
+                  })();
+                }}
+              >
                 <div className="grid gap-2">
                   <div className="grid gap-1">
                     <Label className="sr-only" htmlFor="email">
@@ -122,7 +128,11 @@ export default function SignIn({
                 variant="outline"
                 type="button"
                 disabled={isLoading}
-                onClick={() => signIn("google")}
+                onClick={() => {
+                  void (async () => {
+                    await signIn("google");
+                  })();
+                }}
               >
                 {isLoading ? (
                   <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />

@@ -59,7 +59,14 @@ export const CreateColumnDialog: React.FC<Props> = ({
           <DialogTitle className="heading-lg">Add New Column</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={() => {
+              void (async () => {
+                await form.handleSubmit(onSubmit)();
+              })();
+            }}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="title"

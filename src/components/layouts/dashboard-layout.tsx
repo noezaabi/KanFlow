@@ -8,20 +8,22 @@ import { CreateBoardDialog } from "../dialog/CreateBoardDialog";
 import { useTheme } from "next-themes";
 import { createContext, useState } from "react";
 import { boolean } from "zod/lib/types";
+import { useRouter } from "next/router";
 
 interface Props {
-  route: string;
   children: React.ReactNode;
 }
 
 export const SidebarContext = createContext(true);
 
-const DashboardLayout: React.FC<Props> = ({ route, children }) => {
+const DashboardLayout: React.FC<Props> = ({ children }) => {
   const { systemTheme, theme, setTheme } = useTheme();
   const currentTheme = theme === "system" ? systemTheme : theme;
   const session = useSession();
   const { isOpen, onToggle } = useDisclosure();
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState(false);
+  const router = useRouter();
+  const route = router.query.id;
 
   const Boards = api.board.getBoardByUserId.useQuery({
     userId: session.data?.user.id || "",
@@ -164,15 +166,15 @@ const DashboardLayout: React.FC<Props> = ({ route, children }) => {
           version="1.1"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 512 512"
-          enable-background="new 0 0 512 512"
+          enableBackground="new 0 0 512 512"
           stroke="#ffffff"
           className="pr-1"
         >
-          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
           <g
             id="SVGRepo_tracerCarrier"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           ></g>
           <g id="SVGRepo_iconCarrier">
             {" "}

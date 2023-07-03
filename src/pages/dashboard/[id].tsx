@@ -20,14 +20,12 @@ import { api } from "~/utils/api";
 import { SidebarContext } from "~/components/layouts/dashboard-layout";
 
 Board.getLayout = function getLayout(page: ReactElement) {
-  const router = useRouter();
-
   return (
     <>
       <Head>
-        <title>{`Kanflow - ${router.query.id} Board`}</title>
+        <title>{`Kanflow Board`}</title>
       </Head>
-      <DashboardLayout route={`${router.query.id}`}>{page}</DashboardLayout>
+      <DashboardLayout>{page}</DashboardLayout>
     </>
   );
 };
@@ -96,7 +94,7 @@ export default function Board(props: { boardId: string }) {
             </div>
             <div className="mt-6 flex flex-col gap-5">
               {col.tasks.map((task, index) => (
-                <Card className="shadow-md">
+                <Card key={task.id} className="shadow-md">
                   <CardHeader>
                     <CardTitle>{task.title}</CardTitle>
                     <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
