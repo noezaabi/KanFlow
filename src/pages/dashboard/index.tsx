@@ -38,7 +38,7 @@ export default function Dashboard() {
       <div className="row-span-10  flex flex-col items-center justify-center overflow-auto overscroll-none p-6">
         <h1 className="heading-xl">Welcome back !</h1>
         <h2 className="heading-l text-medgray">
-          Select the project you would like to work with to get started...
+          Select the project you would like to work on to get started...
         </h2>
       </div>
     </div>

@@ -31,6 +31,13 @@ export const updateTaskFormSchema = z.object({
   title: z.string().nonempty({ message: "A title is required." }),
   description: z.string(),
   columnId: z.string().nonempty({ message: "A column is required." }),
+  subtasks: z.array(
+    z.object({
+      id: z.string().nonempty({ message: "A subtask id is required." }),
+      title: z.string().nonempty({ message: "A subtask name is required." }),
+      done: z.boolean(),
+    })
+  ),
 });
 
 // model Task {

@@ -1,22 +1,16 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { createColumnFormSchema } from "~/const/form-validation-schema";
+import { Subtask, Task } from "@prisma/client";
+import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
+import { MoreVertical, Pen, Trash } from "lucide-react";
+import { useState } from "react";
 import { api } from "~/utils/api";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
-import { Subtask, Task } from "@prisma/client";
-import { Checkbox } from "../ui/checkbox";
-import { Dispatch, SetStateAction, useState } from "react";
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -24,14 +18,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { on } from "events";
-import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
+import { useDisclosure } from "~/hooks/useDisclosure";
+import { EditTaskDialog } from "./EditTaskDialog";
 import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { MoreHorizontal, MoreVertical, Pen, Trash } from "lucide-react";
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@radix-ui/react-alert-dialog";
+import { AlertDialogHeader, AlertDialogFooter } from "../ui/alert-dialog";
+import { DeleteTaskDialog } from "./DeleteTaskDialog";
 
 interface Props {
   isOpen: boolean;
@@ -48,9 +47,21 @@ export const TaskDialog: React.FC<Props> = ({
   task,
   columns,
 }) => {
+  const { isOpen: isOpenEdit, onToggle: onToggleEdit } = useDisclosure();
+  const { isOpen: isOpenDelete, onToggle: onToggleDelete } = useDisclosure();
   const ctx = api.useContext();
   const { mutate: updateTask, isLoading: isLoadingTask } =
     api.board.updateTask.useMutation({
+      onSuccess: () => {
+        void ctx.board.getBoardById.invalidate();
+        onToggle();
+      },
+      onError: (err) => {
+        console.log(err);
+      },
+    });
+  const { mutate: deleteTask, isLoading: isLoadingDeleteTask } =
+    api.board.deleteTask.useMutation({
       onSuccess: () => {
         void ctx.board.getBoardById.invalidate();
         onToggle();
@@ -72,18 +83,26 @@ export const TaskDialog: React.FC<Props> = ({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+                  className="flex h-8 w-8 p-0 data-[state=open]:bg-muted "
                 >
                   <MoreVertical className="h-4 w-4" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[160px]">
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onToggleEdit();
+                  }}
+                >
                   <Pen className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onToggleDelete();
+                  }}
+                >
                   <Trash className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
                   Delete
                 </DropdownMenuItem>
@@ -109,7 +128,7 @@ export const TaskDialog: React.FC<Props> = ({
           </h3>
           <Select
             onValueChange={(value) => {
-              const { subtasks, createdAt, updatedAt, ...taskObject } = task;
+              const { createdAt, updatedAt, ...taskObject } = task;
               taskObject.columnId = value;
               updateTask({ task: taskObject });
             }}
@@ -126,6 +145,19 @@ export const TaskDialog: React.FC<Props> = ({
               ))}
             </SelectContent>
           </Select>
+          <EditTaskDialog
+            isOpen={isOpenEdit}
+            onToggle={onToggleEdit}
+            parentToggle={onToggle}
+            task={task}
+            columns={columns}
+          />
+          <DeleteTaskDialog
+            isOpen={isOpenDelete}
+            onToggle={onToggleDelete}
+            parentToggle={onToggle}
+            taskId={task.id}
+          />
         </div>
       </DialogContent>
     </Dialog>

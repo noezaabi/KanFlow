@@ -105,6 +105,33 @@ export const boardRouter = createTRPCRouter({
           title: input.task.title,
           description: input.task.description,
           columnId: input.task.columnId,
+          subtasks: {
+            upsert: input.task.subtasks.map((subtask) => ({
+              where: {
+                id: subtask.id,
+              },
+              update: {
+                title: subtask.title,
+                done: subtask.done,
+              },
+              create: {
+                title: subtask.title,
+                done: false,
+              },
+            })),
+          },
+        },
+      });
+      console.log("Board updated : ", board);
+    }),
+
+  // deleteTask using a taskId
+  deleteTask: protectedProcedure
+    .input(z.object({ taskId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const board = await ctx.prisma.task.delete({
+        where: {
+          id: input.taskId,
         },
       });
     }),
