@@ -3,13 +3,10 @@ import {
   createBoardFormSchema,
   createColumnFormSchema,
   createTaskFormSchema,
+  editBoardFormSchema,
   updateTaskFormSchema,
 } from "~/const/form-validation-schema";
-import {
-  createTRPCRouter,
-  publicProcedure,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const boardRouter = createTRPCRouter({
   // createBoard using the input createBoardFormSchema
@@ -85,6 +82,75 @@ export const boardRouter = createTRPCRouter({
               done: false,
             })),
           },
+        },
+      });
+    }),
+
+  // updateBoard using the input editBoardFormSchema and a boardId
+  updateBoard: protectedProcedure
+    .input(
+      z.object({
+        board: editBoardFormSchema,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const initialColumns = await ctx.prisma.column.findMany({
+        where: {
+          boardId: input.board.id,
+        },
+      });
+
+      const deletedColumns = initialColumns.filter(
+        (initialColumn) =>
+          !input.board.columns.some(
+            (newColumn) => newColumn.id === initialColumn.id
+          )
+      );
+
+      await ctx.prisma.column.deleteMany({
+        where: {
+          id: {
+            in: deletedColumns.map((column) => column.id),
+          },
+        },
+      });
+
+      console.log(input.board.title);
+
+      const board = await ctx.prisma.board.update({
+        where: {
+          id: input.board.id,
+        },
+        data: {
+          title: input.board.title,
+          columns: {
+            upsert: input.board.columns.map((column) => ({
+              where: {
+                id: column.id,
+              },
+              update: {
+                title: column.title,
+              },
+              create: {
+                title: column.title,
+                color: Math.floor(Math.random() * 16777215).toString(16),
+                tasks: {
+                  create: [],
+                },
+              },
+            })),
+          },
+        },
+      });
+    }),
+
+  // Delete column using the input columnId
+  deleteColumn: protectedProcedure
+    .input(z.object({ columnId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const board = await ctx.prisma.column.delete({
+        where: {
+          id: input.columnId,
         },
       });
     }),

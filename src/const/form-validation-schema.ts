@@ -11,6 +11,20 @@ export const createBoardFormSchema = z.object({
     .nonempty({ message: "At least one column is required." }),
 });
 
+export const editBoardFormSchema = z.object({
+  id: z.string().nonempty({ message: "A board id is required." }),
+  title: z.string().nonempty({ message: "A title is required." }),
+  columns: z
+    .array(
+      z.object({
+        id: z.string().nonempty({ message: "A column id is required." }),
+        title: z.string().nonempty({ message: "A column name is required." }),
+        color: z.string(),
+      })
+    )
+    .nonempty({ message: "At least one column is required." }),
+});
+
 export const createColumnFormSchema = z.object({
   title: z.string().nonempty({ message: "A title is required." }),
 });

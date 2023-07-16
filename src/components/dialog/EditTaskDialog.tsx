@@ -1,10 +1,12 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Subtask, Task } from "@prisma/client";
+import Image from "next/image";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createTaskFormSchema,
-  updateTaskFormSchema,
-} from "~/const/form-validation-schema";
+import { updateTaskFormSchema } from "~/const/form-validation-schema";
+import { cn } from "~/lib/utils";
+import { api } from "~/utils/api";
+import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import {
   Form,
@@ -15,11 +17,6 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { cn } from "~/lib/utils";
-import Image from "next/image";
-import { api } from "~/utils/api";
-import { Textarea } from "../ui/text-area";
 import {
   Select,
   SelectContent,
@@ -27,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Board, Column, Subtask, Task } from "@prisma/client";
+import { Textarea } from "../ui/text-area";
 
 interface Props {
   isOpen: boolean;

@@ -1,12 +1,17 @@
+import { Subtask, Task, Board, Column } from "@prisma/client";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { ReactElement, useContext, useState } from "react";
+import { ReactElement, useContext, useEffect, useState } from "react";
 import { CreateColumnDialog } from "~/components/dialog/CreateColumnDialog";
 import { CreateTaskDialog } from "~/components/dialog/CreateTaskDialog";
+import { EditBoardDialog } from "~/components/dialog/EditBoardDialog";
+import { TaskDialog } from "~/components/dialog/TaskDialog";
 import { DropdownAvatar } from "~/components/dropdown-avatar";
 import { Icons } from "~/components/icons";
-import DashboardLayout from "~/components/layouts/dashboard-layout";
+import DashboardLayout, {
+  SidebarContext,
+} from "~/components/layouts/dashboard-layout";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -17,10 +22,6 @@ import {
 import { useDisclosure } from "~/hooks/useDisclosure";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/utils/api";
-import { SidebarContext } from "~/components/layouts/dashboard-layout";
-import { TaskDialog } from "~/components/dialog/TaskDialog";
-import { Subtask, Task } from "@prisma/client";
-import { set } from "zod";
 
 Board.getLayout = function getLayout(page: ReactElement) {
   return (
@@ -34,11 +35,14 @@ Board.getLayout = function getLayout(page: ReactElement) {
 };
 
 export default function Board(props: { boardId: string }) {
+  const router = useRouter();
   const { boardId } = props;
   const { isOpen: isOpenColumn, onToggle: onToggleColumn } = useDisclosure();
   const { isOpen: isOpenCreateTask, onToggle: onToggleCreateTask } =
     useDisclosure();
   const { isOpen: isOpenTask, onToggle: onToggleTask } = useDisclosure();
+  const { isOpen: isOpenEditBoard, onToggle: onToggleEditBoard } =
+    useDisclosure();
   const [taskDialogData, setTaskDialogData] = useState<
     Task & {
       subtasks: Subtask[];
@@ -61,7 +65,13 @@ export default function Board(props: { boardId: string }) {
       },
     ],
   });
+  const [dialogKey, setDialogKey] = useState<number>(Math.random());
   const isSideBarCollapsed = useContext(SidebarContext);
+  // This Hook ensure we reload the editBoardDialog everytime we change the board we are looking at. If we didn't do this the
+  // form inside the default values inside the components wouldn't update
+  useEffect(() => {
+    setDialogKey(Math.random());
+  }, [router.asPath]);
 
   const { data, isLoading } = api.board.getBoardById.useQuery({
     boardId: boardId,
@@ -89,8 +99,6 @@ export default function Board(props: { boardId: string }) {
     return <div>Board not found</div>;
   }
 
-  // loop over columns
-
   return (
     <div
       className={`grid h-screen grid-rows-11 ${
@@ -98,7 +106,16 @@ export default function Board(props: { boardId: string }) {
       }`}
     >
       <div className="row-span-1 flex items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
-        <h1 className="heading-xl dark:text-white">{data.title}</h1>
+        <div className="flex gap-4">
+          <button
+            onClick={() => {
+              onToggleEditBoard();
+            }}
+          >
+            <h1 className="heading-xl dark:text-white">{data.title}</h1>
+          </button>
+        </div>
+
         <div className="flex gap-4">
           <Button
             onClick={() => {
@@ -107,6 +124,7 @@ export default function Board(props: { boardId: string }) {
           >
             + Add New Task
           </Button>
+
           <DropdownAvatar />
         </div>
       </div>
@@ -187,6 +205,13 @@ export default function Board(props: { boardId: string }) {
             id: col.id,
             title: col.title,
           }))}
+        />
+        <EditBoardDialog
+          key={dialogKey}
+          isOpen={isOpenEditBoard}
+          onToggle={onToggleEditBoard}
+          board={data}
+          setKey={setDialogKey}
         />
       </div>
     </div>
