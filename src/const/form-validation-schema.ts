@@ -48,6 +48,7 @@ export const updateTaskFormSchema = z.object({
   subtasks: z.array(
     z.object({
       id: z.string().nonempty({ message: "A subtask id is required." }),
+      index: z.number().default(0).optional(),
       title: z.string().nonempty({ message: "A subtask name is required." }),
       done: z.boolean(),
     })

@@ -80,7 +80,6 @@ export const EditTaskDialog: React.FC<Props> = ({
         subtasks: values.subtasks,
       },
     });
-    form.reset();
   }
 
   const subTaskPlaceholders = [

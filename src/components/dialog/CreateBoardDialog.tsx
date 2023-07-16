@@ -55,7 +55,6 @@ export const CreateBoardDialog: React.FC<Props> = ({ isOpen, onToggle }) => {
 
   function onSubmit(values: z.infer<typeof createBoardFormSchema>): void {
     addBoard(values);
-    form.reset();
   }
 
   return (

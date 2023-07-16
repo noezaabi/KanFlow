@@ -51,12 +51,14 @@ export default function Board(props: { boardId: string }) {
     id: "1",
     createdAt: new Date(),
     updatedAt: new Date(),
+    order: 0,
     title: "Task 1",
     description: "Task 1 description",
     columnId: "1",
     subtasks: [
       {
         id: "1",
+        order: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
         title: "Subtask 1",
@@ -98,6 +100,14 @@ export default function Board(props: { boardId: string }) {
   if (!data) {
     return <div>Board not found</div>;
   }
+
+  data.columns.forEach((col) => {
+    col.tasks.forEach((task) => {
+      task.subtasks.sort(
+        (a, b) => b.createdAt.getTime() - b.createdAt.getTime()
+      );
+    });
+  });
 
   return (
     <div

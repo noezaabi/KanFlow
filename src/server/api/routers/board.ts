@@ -13,7 +13,7 @@ export const boardRouter = createTRPCRouter({
   createBoard: protectedProcedure
     .input(createBoardFormSchema)
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.board.create({
+      await ctx.prisma.board.create({
         data: {
           title: input.title,
           columns: {
@@ -38,7 +38,7 @@ export const boardRouter = createTRPCRouter({
   createColumn: protectedProcedure
     .input(z.object({ boardId: z.string(), column: createColumnFormSchema }))
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.board.update({
+      await ctx.prisma.board.update({
         where: {
           id: input.boardId,
         },
@@ -67,18 +67,35 @@ export const boardRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.task.create({
+      const currentColumns = await ctx.prisma.column.findMany({
+        where: {
+          boardId: input.boardId,
+        },
+        include: {
+          tasks: true,
+        },
+      });
+
+      const ownerColumn = currentColumns.filter(
+        (column) => column.id === input.task.columnId
+      )[0];
+
+      const taskNumber = ownerColumn ? ownerColumn.tasks.length : 0;
+
+      await ctx.prisma.task.create({
         data: {
           title: input.task.title,
           description: input.task.description,
+          order: taskNumber,
           column: {
             connect: {
               id: input.task.columnId,
             },
           },
           subtasks: {
-            create: input.task.subtasks.map((subtask) => ({
+            create: input.task.subtasks.map((subtask, index) => ({
               title: subtask.title,
+              order: index,
               done: false,
             })),
           },
@@ -117,7 +134,7 @@ export const boardRouter = createTRPCRouter({
 
       console.log(input.board.title);
 
-      const board = await ctx.prisma.board.update({
+      await ctx.prisma.board.update({
         where: {
           id: input.board.id,
         },
@@ -148,7 +165,7 @@ export const boardRouter = createTRPCRouter({
   deleteColumn: protectedProcedure
     .input(z.object({ columnId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.column.delete({
+      await ctx.prisma.column.delete({
         where: {
           id: input.columnId,
         },
@@ -163,7 +180,26 @@ export const boardRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.task.update({
+      input.task.subtasks.map((subtask, index) => (subtask.index = index));
+      const initialTask = await ctx.prisma.task.findUnique({
+        where: {
+          id: input.task.id,
+        },
+      });
+      let numTask = initialTask?.order || 0;
+      if (initialTask && initialTask.columnId !== input.task.columnId) {
+        const targetColumn = await ctx.prisma.column.findUnique({
+          where: {
+            id: input.task.columnId,
+          },
+          include: {
+            tasks: true,
+          },
+        });
+        numTask = targetColumn ? targetColumn.tasks.length : 0;
+      }
+
+      await ctx.prisma.task.update({
         where: {
           id: input.task.id,
         },
@@ -171,6 +207,7 @@ export const boardRouter = createTRPCRouter({
           title: input.task.title,
           description: input.task.description,
           columnId: input.task.columnId,
+          order: numTask,
           subtasks: {
             upsert: input.task.subtasks.map((subtask) => ({
               where: {
@@ -178,26 +215,38 @@ export const boardRouter = createTRPCRouter({
               },
               update: {
                 title: subtask.title,
+                order: subtask.index,
                 done: subtask.done,
               },
               create: {
                 title: subtask.title,
+                order: subtask.index ?? 0,
                 done: false,
               },
             })),
           },
         },
       });
-      console.log("Board updated : ", board);
     }),
 
   // deleteTask using a taskId
   deleteTask: protectedProcedure
     .input(z.object({ taskId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.task.delete({
+      await ctx.prisma.task.delete({
         where: {
           id: input.taskId,
+        },
+      });
+    }),
+
+  // deleteBoard using a boardId
+  deleteBoard: protectedProcedure
+    .input(z.object({ boardId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.board.delete({
+        where: {
+          id: input.boardId,
         },
       });
     }),
@@ -213,7 +262,7 @@ export const boardRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const board = await ctx.prisma.subtask.update({
+      await ctx.prisma.subtask.update({
         where: {
           id: input.subtask.id,
         },

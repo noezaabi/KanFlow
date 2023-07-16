@@ -43,7 +43,6 @@ export const CreateColumnDialog: React.FC<Props> = ({
   });
 
   function onSubmit(values: z.infer<typeof createColumnFormSchema>) {
-    form.reset();
     addColumn({
       boardId,
       column: {

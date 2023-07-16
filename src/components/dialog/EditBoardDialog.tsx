@@ -18,6 +18,9 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Dispatch, SetStateAction } from "react";
+import { Trash } from "lucide-react";
+import { DeleteBoardDialog } from "./DeleteBoardDialog";
+import { useDisclosure } from "~/hooks/useDisclosure";
 
 interface Props {
   isOpen: boolean;
@@ -58,6 +61,8 @@ export const EditBoardDialog: React.FC<Props> = ({
     name: "columns",
     control: form.control,
   });
+  const { isOpen: isOpenDeleteBoard, onToggle: onToggleDeleteBoard } =
+    useDisclosure();
 
   function onSubmit(values: z.infer<typeof editBoardFormSchema>) {
     editBoard({ board: values });
@@ -67,7 +72,12 @@ export const EditBoardDialog: React.FC<Props> = ({
     <Dialog open={isOpen} onOpenChange={onToggle}>
       <DialogContent className="bg-white">
         <DialogHeader>
-          <DialogTitle className="heading-lg">Edit Board</DialogTitle>
+          <div className="flex justify-between">
+            <DialogTitle className="heading-lg">Edit Board</DialogTitle>
+            <button onClick={onToggleDeleteBoard}>
+              <Trash size={20} />
+            </button>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -146,6 +156,12 @@ export const EditBoardDialog: React.FC<Props> = ({
           </form>
         </Form>
       </DialogContent>
+      <DeleteBoardDialog
+        isOpen={isOpenDeleteBoard}
+        onToggle={onToggleDeleteBoard}
+        parentToggle={onToggle}
+        boardId={board.id}
+      />
     </Dialog>
   );
 };
