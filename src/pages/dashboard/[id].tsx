@@ -3,6 +3,8 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { ReactElement, useContext, useEffect, useState } from "react";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { set } from "zod";
 import { CreateColumnDialog } from "~/components/dialog/CreateColumnDialog";
 import { CreateTaskDialog } from "~/components/dialog/CreateTaskDialog";
 import { EditBoardDialog } from "~/components/dialog/EditBoardDialog";
@@ -22,6 +24,7 @@ import {
 import { useDisclosure } from "~/hooks/useDisclosure";
 import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/utils/api";
+import type { editBoardFormSchema } from "~/const/form-validation-schema";
 
 Board.getLayout = function getLayout(page: ReactElement) {
   return (
@@ -75,8 +78,26 @@ export default function Board(props: { boardId: string }) {
     setDialogKey(Math.random());
   }, [router.asPath]);
 
-  const { data, isLoading } = api.board.getBoardById.useQuery({
-    boardId: boardId,
+  const [boardData, setBoardData] = useState<typeof data>();
+
+  const { data, isLoading } = api.board.getBoardById.useQuery(
+    {
+      boardId: boardId,
+    },
+    {
+      onSuccess: (data) => {
+        setBoardData(data);
+      },
+    }
+  );
+
+  const { mutate: reorderTasks } = api.board.reorderTasks.useMutation({
+    onSuccess: () => {
+      console.log("Task reordered!");
+    },
+    onError: (err) => {
+      console.log(err);
+    },
   });
 
   if (isLoading) {
@@ -101,13 +122,92 @@ export default function Board(props: { boardId: string }) {
     return <div>Board not found</div>;
   }
 
-  data.columns.forEach((col) => {
-    col.tasks.forEach((task) => {
-      task.subtasks.sort(
-        (a, b) => b.createdAt.getTime() - b.createdAt.getTime()
-      );
+  const onDragEnd = (result: any) => {
+    const { destination, source, draggableId, type } = result;
+
+    // Make sure there is a destination
+    if (!destination) {
+      return;
+    }
+
+    // Make sure the user didn't drop the item in the same place
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    // find the column the user is dragging from
+    const originColumn = boardData!.columns.find(
+      (col) => col.id === source.droppableId
+    );
+
+    // find the column the user is dragging to
+    const destinationColumn = boardData!.columns.find(
+      (col) => col.id === destination.droppableId
+    );
+
+    if (!originColumn || !destinationColumn) {
+      throw new Error("Column not found");
+    }
+
+    // remove the task from the origin column
+    const [task] = originColumn.tasks.splice(source.index, 1);
+
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    task.columnId = destinationColumn.id;
+
+    // add the task to the destination column
+    destinationColumn.tasks.splice(destination.index, 0, task);
+
+    // update the order of the tasks in the origin column
+    for (let i = 0; i < originColumn.tasks.length; i++) {
+      originColumn.tasks[i]!.order = i;
+    }
+
+    if (destinationColumn.id !== originColumn.id) {
+      // update the order of the tasks in the destination column
+      for (let i = 0; i < destinationColumn.tasks.length; i++) {
+        destinationColumn.tasks[i]!.order = i;
+      }
+    }
+
+    // add the updated columns to the board data
+    const newBoardData = {
+      ...boardData,
+      columns: boardData!.columns.map((col) => {
+        if (col.id === originColumn!.id) {
+          return originColumn;
+        } else if (col.id === destinationColumn!.id) {
+          return destinationColumn;
+        } else {
+          return col;
+        }
+      }),
+    };
+
+    newBoardData ?? setBoardData(newBoardData);
+
+    // Reorder the tasks in the database
+    reorderTasks({
+      columnId: originColumn.id,
+      tasks: originColumn.tasks.map((task) => ({
+        order: task.order,
+        id: task.id,
+      })),
     });
-  });
+    reorderTasks({
+      columnId: destinationColumn.id,
+      tasks: destinationColumn.tasks.map((task) => ({
+        order: task.order,
+        id: task.id,
+      })),
+    });
+  };
 
   return (
     <div
@@ -138,92 +238,96 @@ export default function Board(props: { boardId: string }) {
           <DropdownAvatar />
         </div>
       </div>
-      <div className="row-span-10 flex gap-6 overflow-auto overscroll-none p-6">
-        {data.columns.map((col) => (
-          // column
-          <div key={col.id} className="flex w-80 shrink-0 flex-col">
-            <div className="flex gap-3">
-              <div
-                className={`h-5 w-5 rounded-full`}
-                style={{ backgroundColor: `#${col.color}` }}
-              ></div>
-              <p className="heading-sm mt-0.5 uppercase">{`${col.title} (${col.tasks.length})`}</p>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="row-span-10 flex gap-6 overflow-auto overscroll-none p-6">
+          {data.columns.map((col) => (
+            // column
+            <div key={col.id} className="flex w-80 shrink-0 flex-col">
+              <div className="flex gap-3">
+                <div
+                  className={`h-5 w-5 rounded-full`}
+                  style={{ backgroundColor: `#${col.color}` }}
+                />
+                <p className="heading-sm mt-0.5 uppercase">{`${col.title} (${col.tasks.length})`}</p>
+              </div>
+              <Droppable droppableId={col.id}>
+                {(provided) => (
+                  <div
+                    className="mt-6 flex flex-col gap-5"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {col.tasks.map((task, index) => (
+                      <Draggable
+                        draggableId={task.id}
+                        index={index}
+                        key={task.id}
+                      >
+                        {(provided) => (
+                          <Card
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                            className="cursor-pointer shadow-md"
+                            onClick={() => {
+                              setTaskDialogData(task);
+                              onToggleTask();
+                            }}
+                          >
+                            <CardHeader>
+                              <CardTitle>{task.title}</CardTitle>
+                              <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
+                            </CardHeader>
+                          </Card>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
             </div>
-            <div className="mt-6 flex flex-col gap-5">
-              {col.tasks.map((task, index) => (
-                <Card
-                  key={task.id}
-                  className="cursor-pointer shadow-md"
-                  onClick={() => {
-                    setTaskDialogData(task);
-                    onToggleTask();
-                  }}
-                >
-                  <CardHeader>
-                    <CardTitle>{task.title}</CardTitle>
-                    <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
+          ))}
 
-              {/* {col.tasks.length > 0 ? (
-                col.tasks.map((task) => (
-                  <Card className="shadow-md">
-                    <CardHeader>
-                      <CardTitle>{task.title}</CardTitle>
-                      <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
-                    </CardHeader>
-                  </Card>
-                ))
-              ) : (
-                <Card className="flex h-24 cursor-pointer items-center justify-center bg-[#E9EFFA]">
-                  <h1 className="heading-lg w-72 text-center text-medgray">
-                    + New Task
-                  </h1>
-                </Card>
-              )} */}
-            </div>
-          </div>
-        ))}
-
-        <Card
-          onClick={() => {
-            onToggleColumn();
-          }}
-          className="mt-11 flex h-[90%]
+          <Card
+            onClick={() => {
+              onToggleColumn();
+            }}
+            className="mt-11 flex h-[90%]
            cursor-pointer items-center justify-center bg-[#E9EFFA]"
-        >
-          <h1 className="heading-lg w-72 text-center text-medgray">
-            + Add Column
-          </h1>
-        </Card>
-        <CreateColumnDialog
-          isOpen={isOpenColumn}
-          onToggle={onToggleColumn}
-          boardId={data.id}
-        />
-        <CreateTaskDialog
-          isOpen={isOpenCreateTask}
-          onToggle={onToggleCreateTask}
-          boardData={data}
-        />
-        <TaskDialog
-          isOpen={isOpenTask}
-          onToggle={onToggleTask}
-          task={taskDialogData}
-          columns={data.columns.map((col) => ({
-            id: col.id,
-            title: col.title,
-          }))}
-        />
-        <EditBoardDialog
-          key={dialogKey}
-          isOpen={isOpenEditBoard}
-          onToggle={onToggleEditBoard}
-          board={data}
-          setKey={setDialogKey}
-        />
-      </div>
+          >
+            <h1 className="heading-lg w-72 text-center text-medgray">
+              + Add Column
+            </h1>
+          </Card>
+          <CreateColumnDialog
+            isOpen={isOpenColumn}
+            onToggle={onToggleColumn}
+            boardId={data.id}
+          />
+          <CreateTaskDialog
+            isOpen={isOpenCreateTask}
+            onToggle={onToggleCreateTask}
+            boardData={data}
+          />
+          <TaskDialog
+            isOpen={isOpenTask}
+            onToggle={onToggleTask}
+            task={taskDialogData}
+            columns={data.columns.map((col) => ({
+              id: col.id,
+              title: col.title,
+            }))}
+          />
+          <EditBoardDialog
+            key={dialogKey}
+            isOpen={isOpenEditBoard}
+            onToggle={onToggleEditBoard}
+            board={data}
+            setKey={setDialogKey}
+          />
+        </div>
+      </DragDropContext>
     </div>
   );
 }

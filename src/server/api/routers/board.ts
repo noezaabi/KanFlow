@@ -172,6 +172,38 @@ export const boardRouter = createTRPCRouter({
       });
     }),
 
+  reorderTasks: protectedProcedure
+    .input(
+      z.object({
+        columnId: z.string(),
+        tasks: z.array(
+          z.object({
+            id: z.string(),
+            order: z.number(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await Promise.all(
+        input.tasks.map(async (task) => {
+          await ctx.prisma.task.update({
+            where: {
+              id: task.id,
+            },
+            data: {
+              order: task.order,
+              column: {
+                connect: {
+                  id: input.columnId,
+                },
+              },
+            },
+          });
+        })
+      );
+    }),
+
   // updateTask using the input updateTaskFormSchema and a boardId
   updateTask: protectedProcedure
     .input(
@@ -302,6 +334,9 @@ export const boardRouter = createTRPCRouter({
             },
             include: {
               tasks: {
+                orderBy: {
+                  order: "asc",
+                },
                 include: {
                   subtasks: {
                     orderBy: {
