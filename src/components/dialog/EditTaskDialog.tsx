@@ -75,6 +75,7 @@ export const EditTaskDialog: React.FC<Props> = ({
       task: {
         id: task.id,
         title: values.title,
+        order: task.order,
         description: values.description,
         columnId: values.columnId,
         subtasks: values.subtasks,

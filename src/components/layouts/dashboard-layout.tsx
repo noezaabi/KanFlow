@@ -8,6 +8,13 @@ import { useDisclosure } from "~/hooks/useDisclosure";
 import { api } from "~/utils/api";
 import { CreateBoardDialog } from "../dialog/CreateBoardDialog";
 import { DarkModeSwitch } from "../ui/switch";
+import {
+  DragDropContext,
+  Draggable,
+  DraggableRubric,
+  DropResult,
+  Droppable,
+} from "react-beautiful-dnd";
 
 interface Props {
   children: React.ReactNode;
@@ -23,10 +30,148 @@ const DashboardLayout: React.FC<Props> = ({ children }) => {
   const [isSideBarCollapsed, setIsSideBarCollapsed] = useState(false);
   const router = useRouter();
   const route = router.query.id;
-
-  const Boards = api.board.getBoardByUserId.useQuery({
-    userId: session.data?.user.id || "",
+  const [boardsData, setBoardsData] = useState<typeof data>();
+  const { mutate: reorderBoards } = api.board.reorderBoards.useMutation({
+    onError: (err) => {
+      console.log(err);
+    },
   });
+
+  const { data, isLoading } = api.board.getBoardByUserId.useQuery(
+    {
+      userId: session.data?.user.id || "",
+    },
+    {
+      onSuccess: (data) => {
+        setBoardsData(data);
+      },
+    }
+  );
+  console.log(currentTheme);
+
+  if (isLoading || !boardsData) {
+    return (
+      <main className="grid w-screen grid-cols-5 grid-rows-1">
+        <div
+          className={` h-screen flex-col justify-between border-r bg-white py-8 transition-all dark:bg-darkgray ${
+            isSideBarCollapsed ? "hidden" : "col-span-1 hidden md:flex"
+          }`}
+        >
+          <div className={isSideBarCollapsed ? "hidden" : "block"}>
+            <Link href="/dashboard">
+              <Image
+                src={
+                  currentTheme === "light"
+                    ? "/images/kanban-logo.svg"
+                    : "/images/kanban-logo-dark.svg"
+                }
+                alt="KanFlow Logo"
+                width={150}
+                height={25}
+                className="pl-8"
+              />
+            </Link>
+
+            <div className="pt-14"></div>
+          </div>
+          <div
+            className={`mx-6  flex-col ${
+              isSideBarCollapsed ? "hidden" : "flex"
+            }`}
+          >
+            <div className=" flex justify-center gap-6 rounded-md bg-background py-4">
+              <Image
+                src="/images/sun.svg"
+                alt="Light mode indicator"
+                width={20}
+                height={20}
+              />
+              <DarkModeSwitch
+                checked={currentTheme !== "dark"}
+                onClick={() =>
+                  currentTheme === "dark" ? setTheme("light") : setTheme("dark")
+                }
+              />
+              <Image
+                src="/images/moon.svg"
+                alt="Dark mode indicator"
+                width={20}
+                height={20}
+              />
+            </div>
+
+            <button
+              className="mt-2 flex gap-2 py-4 hover:underline"
+              onClick={() => setIsSideBarCollapsed(!isSideBarCollapsed)}
+            >
+              <Image
+                src="/images/eye-slash.svg"
+                alt="Hide icon"
+                width={20}
+                height={20}
+              />
+              <p className={"heading-m text-medgray"}> Hide Sidebar</p>
+            </button>
+          </div>
+        </div>
+        <button
+          className={`absolute bottom-8 left-0 h-12 w-14 items-center justify-center rounded-r-full bg-primary ${
+            !isSideBarCollapsed ? "hidden" : "flex"
+          }`}
+          onClick={() => setIsSideBarCollapsed(!isSideBarCollapsed)}
+        >
+          <svg
+            fill="#ffffff"
+            height="30px"
+            width="30px"
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            enableBackground="new 0 0 512 512"
+            stroke="#ffffff"
+            className="pr-1"
+          >
+            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            <g
+              id="SVGRepo_tracerCarrier"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            ></g>
+            <g id="SVGRepo_iconCarrier">
+              {" "}
+              <g>
+                {" "}
+                <path d="m494.8,241.4l-50.6-49.4c-50.1-48.9-116.9-75.8-188.2-75.8s-138.1,26.9-188.2,75.8l-50.6,49.4c-11.3,12.3-4.3,25.4 0,29.2l50.6,49.4c50.1,48.9 116.9,75.8 188.2,75.8s138.1-26.9 188.2-75.8l50.6-49.4c4-3.8 11.7-16.4 0-29.2zm-238.8,84.4c-38.5,0-69.8-31.3-69.8-69.8 0-38.5 31.3-69.8 69.8-69.8 38.5,0 69.8,31.3 69.8,69.8 0,38.5-31.3,69.8-69.8,69.8zm-195.3-69.8l35.7-34.8c27-26.4 59.8-45.2 95.7-55.4-28.2,20.1-46.6,53-46.6,90.1 0,37.1 18.4,70.1 46.6,90.1-35.9-10.2-68.7-29-95.7-55.3l-35.7-34.7zm355,34.8c-27,26.3-59.8,45.1-95.7,55.3 28.2-20.1 46.6-53 46.6-90.1 0-37.2-18.4-70.1-46.6-90.1 35.9,10.2 68.7,29 95.7,55.4l35.6,34.8-35.6,34.7z"></path>{" "}
+              </g>{" "}
+            </g>
+          </svg>
+        </button>
+        <SidebarContext.Provider value={isSideBarCollapsed}>
+          {children}
+        </SidebarContext.Provider>
+      </main>
+    );
+  }
+
+  const onDragEnd = (result: DropResult): void => {
+    if (!result.destination) {
+      return;
+    }
+
+    const boards = Array.from(boardsData);
+    const [reorderedBoard] = boards.splice(result.source.index, 1);
+    boards.splice(result.destination.index, 0, reorderedBoard!);
+
+    boards.map((board, index) => {
+      board.order = index;
+    });
+
+    setBoardsData(boards);
+
+    reorderBoards({
+      boards,
+    });
+  };
 
   return (
     <main className="grid w-screen grid-cols-5 grid-rows-1">
@@ -52,19 +197,42 @@ const DashboardLayout: React.FC<Props> = ({ children }) => {
 
           <div className="pt-14">
             <p className="heading-sm pl-8">
-              {Boards.data?.length
-                ? `ALL BOARDS (${Boards.data?.length})`
+              {boardsData.length
+                ? `ALL BOARDS (${boardsData.length})`
                 : `ALL BOARDS`}
             </p>
             <div className="mt-5 flex flex-col">
-              {Boards.data?.map((board) => (
-                <BoardOption
-                  key={board.id}
-                  isActive={route === board.id}
-                  boardName={board.title}
-                  link={`/dashboard/${board.id}`}
-                />
-              ))}
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="board">
+                  {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                      {boardsData.map((board, index) => (
+                        <Draggable
+                          key={board.id}
+                          index={index}
+                          draggableId={board.id}
+                        >
+                          {(provided) => (
+                            <div
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              ref={provided.innerRef}
+                            >
+                              <BoardOption
+                                isActive={route === board.id}
+                                boardName={board.title}
+                                link={`/dashboard/${board.id}`}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+
               {/* <BoardOption
                 isActive={route === "platform-launch"}
                 boardName="Platform Launch"
@@ -234,6 +402,7 @@ const BoardOption = (props: {
         </div>
       </div>
     </Link>
+
     //
   );
 };

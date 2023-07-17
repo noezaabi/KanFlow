@@ -31,6 +31,7 @@ export const CreateColumnDialog: React.FC<Props> = ({
     onSuccess: () => {
       onToggle();
       void ctx.board.getBoardById.invalidate();
+      form.reset();
     },
     onError: (err) => {
       console.log(err);

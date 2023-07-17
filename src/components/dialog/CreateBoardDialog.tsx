@@ -24,6 +24,7 @@ import { Button } from "../ui/button";
 import { cn } from "~/lib/utils";
 import Image from "next/image";
 import { api } from "~/utils/api";
+import { useRouter } from "next/router";
 
 interface Props {
   isOpen: boolean;
@@ -32,10 +33,13 @@ interface Props {
 
 export const CreateBoardDialog: React.FC<Props> = ({ isOpen, onToggle }) => {
   const ctx = api.useContext();
+  const router = useRouter();
   const { mutate: addBoard, isLoading } = api.board.createBoard.useMutation({
-    onSuccess: () => {
+    onSuccess: async (data) => {
       onToggle();
       void ctx.board.getBoardByUserId.invalidate();
+      await router.replace(`/dashboard/${data.id}`);
+      form.reset();
     },
     onError: (err) => {
       console.log(err);

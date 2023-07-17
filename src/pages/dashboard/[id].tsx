@@ -103,9 +103,6 @@ export default function Board(props: { boardId: string }) {
   });
 
   const { mutate: reorderColumns } = api.board.reorderColumns.useMutation({
-    onSuccess() {
-      console.log("reorderColumns success");
-    },
     onError: (err) => {
       console.log(err);
     },
@@ -113,16 +110,18 @@ export default function Board(props: { boardId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex w-screen flex-col">
-        <div className="flex h-24 w-full items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
-          {/* <Skeleton className="w-10h-4 h-6 w-96" /> */}
+      <div
+        className={`grid h-screen grid-rows-11 ${
+          isSideBarCollapsed ? "col-span-5" : "col-span-4"
+        }`}
+      >
+        <div className="row-span-1 flex items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
           <div></div>
           <div className="flex gap-4">
-            <Button>+ Add New Task</Button>
             <DropdownAvatar />
           </div>
         </div>
-        <div className="flex h-screen flex-col items-center justify-center">
+        <div className="flex-cols row-span-10 flex items-center justify-center overflow-auto overscroll-none p-6">
           <Icons.spinner className="animate-spin" />
         </div>
       </div>
@@ -130,7 +129,26 @@ export default function Board(props: { boardId: string }) {
   }
 
   if (!data || !boardData) {
-    return <div>Board not found</div>;
+    return (
+      <div
+        className={`grid h-screen grid-rows-11 ${
+          isSideBarCollapsed ? "col-span-5" : "col-span-4"
+        }`}
+      >
+        <div className="row-span-1 flex items-center justify-between border-b bg-white p-7 dark:bg-darkgray">
+          <div></div>
+          <div className="flex gap-4">
+            <DropdownAvatar />
+          </div>
+        </div>
+        <div className="flex-cols row-span-10 flex items-center justify-center overflow-auto overscroll-none p-6">
+          <h1 className="heading-m">
+            We can&apos;t find this board, please select or create another
+            one...
+          </h1>
+        </div>
+      </div>
+    );
   }
 
   const onDragEnd = (result: DropResult): void => {
