@@ -47,7 +47,6 @@ const DashboardLayout: React.FC<Props> = ({ children }) => {
       },
     }
   );
-  console.log(currentTheme);
 
   if (isLoading || !boardsData) {
     return (
@@ -61,7 +60,7 @@ const DashboardLayout: React.FC<Props> = ({ children }) => {
             <Link href="/dashboard">
               <Image
                 src={
-                  currentTheme === "light"
+                  currentTheme !== "light"
                     ? "/images/kanban-logo.svg"
                     : "/images/kanban-logo-dark.svg"
                 }
