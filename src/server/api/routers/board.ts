@@ -17,9 +17,10 @@ export const boardRouter = createTRPCRouter({
         data: {
           title: input.title,
           columns: {
-            create: input.columns.map((column) => ({
+            create: input.columns.map((column, index) => ({
               title: column.title,
               color: Math.floor(Math.random() * 16777215).toString(16),
+              order: index,
               tasks: {
                 create: [],
               },
@@ -38,6 +39,18 @@ export const boardRouter = createTRPCRouter({
   createColumn: protectedProcedure
     .input(z.object({ boardId: z.string(), column: createColumnFormSchema }))
     .mutation(async ({ ctx, input }) => {
+      const currentBoard = await ctx.prisma.board.findUnique({
+        where: {
+          id: input.boardId,
+        },
+
+        include: {
+          columns: true,
+        },
+      });
+
+      const columnNumber = currentBoard ? currentBoard.columns.length : 0;
+
       await ctx.prisma.board.update({
         where: {
           id: input.boardId,
@@ -48,6 +61,7 @@ export const boardRouter = createTRPCRouter({
               {
                 title: input.column.title,
                 color: Math.floor(Math.random() * 16777215).toString(16),
+                order: columnNumber,
                 tasks: {
                   create: [],
                 },
@@ -141,15 +155,17 @@ export const boardRouter = createTRPCRouter({
         data: {
           title: input.board.title,
           columns: {
-            upsert: input.board.columns.map((column) => ({
+            upsert: input.board.columns.map((column, index) => ({
               where: {
                 id: column.id,
               },
               update: {
                 title: column.title,
+                order: index,
               },
               create: {
                 title: column.title,
+                order: index,
                 color: Math.floor(Math.random() * 16777215).toString(16),
                 tasks: {
                   create: [],
@@ -198,6 +214,33 @@ export const boardRouter = createTRPCRouter({
                   id: input.columnId,
                 },
               },
+            },
+          });
+        })
+      );
+    }),
+
+  // reorderColumns using the a list of columns
+  reorderColumns: protectedProcedure
+    .input(
+      z.object({
+        columns: z.array(
+          z.object({
+            id: z.string(),
+            order: z.number(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await Promise.all(
+        input.columns.map(async (column) => {
+          await ctx.prisma.column.update({
+            where: {
+              id: column.id,
+            },
+            data: {
+              order: column.order,
             },
           });
         })
@@ -330,7 +373,7 @@ export const boardRouter = createTRPCRouter({
         include: {
           columns: {
             orderBy: {
-              createdAt: "asc",
+              order: "asc",
             },
             include: {
               tasks: {
@@ -340,7 +383,7 @@ export const boardRouter = createTRPCRouter({
                 include: {
                   subtasks: {
                     orderBy: {
-                      createdAt: "asc",
+                      order: "asc",
                     },
                   },
                 },

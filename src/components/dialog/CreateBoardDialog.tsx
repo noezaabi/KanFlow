@@ -64,14 +64,7 @@ export const CreateBoardDialog: React.FC<Props> = ({ isOpen, onToggle }) => {
           <DialogTitle className="heading-lg">Add New Board</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={() => {
-              void (async () => {
-                await form.handleSubmit(onSubmit)();
-              })();
-            }}
-            className="space-y-5"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="title"

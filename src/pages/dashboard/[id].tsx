@@ -3,7 +3,12 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { ReactElement, useContext, useEffect, useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Draggable,
+  DropResult,
+  Droppable,
+} from "react-beautiful-dnd";
 import { set } from "zod";
 import { CreateColumnDialog } from "~/components/dialog/CreateColumnDialog";
 import { CreateTaskDialog } from "~/components/dialog/CreateTaskDialog";
@@ -92,8 +97,14 @@ export default function Board(props: { boardId: string }) {
   );
 
   const { mutate: reorderTasks } = api.board.reorderTasks.useMutation({
-    onSuccess: () => {
-      console.log("Task reordered!");
+    onError: (err) => {
+      console.log(err);
+    },
+  });
+
+  const { mutate: reorderColumns } = api.board.reorderColumns.useMutation({
+    onSuccess() {
+      console.log("reorderColumns success");
     },
     onError: (err) => {
       console.log(err);
@@ -118,11 +129,11 @@ export default function Board(props: { boardId: string }) {
     );
   }
 
-  if (!data) {
+  if (!data || !boardData) {
     return <div>Board not found</div>;
   }
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult): void => {
     const { destination, source, draggableId, type } = result;
 
     // Make sure there is a destination
@@ -138,13 +149,44 @@ export default function Board(props: { boardId: string }) {
       return;
     }
 
+    // Handle the column logic
+    if (type === "column") {
+      const newColumns = Array.from(boardData.columns);
+      const [removed] = newColumns.splice(source.index, 1);
+      if (!removed) {
+        throw new Error("Column not found");
+      }
+      removed.order = destination.index;
+      newColumns.splice(destination.index, 0, removed);
+
+      for (let i = 0; i < newColumns.length; i++) {
+        newColumns[i]!.order = i;
+      }
+
+      const newBoardData = {
+        ...boardData,
+        columns: newColumns,
+      };
+
+      setBoardData(newBoardData);
+
+      reorderColumns({
+        columns: newColumns.map((col) => ({
+          id: col.id,
+          order: col.order,
+        })),
+      });
+
+      return;
+    }
+
     // find the column the user is dragging from
-    const originColumn = boardData!.columns.find(
+    const originColumn = boardData.columns.find(
       (col) => col.id === source.droppableId
     );
 
     // find the column the user is dragging to
-    const destinationColumn = boardData!.columns.find(
+    const destinationColumn = boardData.columns.find(
       (col) => col.id === destination.droppableId
     );
 
@@ -179,10 +221,10 @@ export default function Board(props: { boardId: string }) {
     // add the updated columns to the board data
     const newBoardData = {
       ...boardData,
-      columns: boardData!.columns.map((col) => {
-        if (col.id === originColumn!.id) {
+      columns: boardData.columns.map((col) => {
+        if (col.id === originColumn.id) {
           return originColumn;
-        } else if (col.id === destinationColumn!.id) {
+        } else if (col.id === destinationColumn.id) {
           return destinationColumn;
         } else {
           return col;
@@ -239,94 +281,122 @@ export default function Board(props: { boardId: string }) {
         </div>
       </div>
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="row-span-10 flex gap-6 overflow-auto overscroll-none p-6">
-          {data.columns.map((col) => (
-            // column
-            <div key={col.id} className="flex w-80 shrink-0 flex-col">
-              <div className="flex gap-3">
-                <div
-                  className={`h-5 w-5 rounded-full`}
-                  style={{ backgroundColor: `#${col.color}` }}
-                />
-                <p className="heading-sm mt-0.5 uppercase">{`${col.title} (${col.tasks.length})`}</p>
-              </div>
-              <Droppable droppableId={col.id}>
-                {(provided) => (
-                  <div
-                    className="mt-6 flex flex-col gap-5"
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                  >
-                    {col.tasks.map((task, index) => (
-                      <Draggable
-                        draggableId={task.id}
-                        index={index}
-                        key={task.id}
-                      >
-                        {(provided) => (
-                          <Card
-                            {...provided.draggableProps}
+        <Droppable
+          droppableId="all-columns"
+          direction="horizontal"
+          type="column"
+        >
+          {(provided) => {
+            return (
+              <div
+                className="row-span-10 flex  overflow-auto overscroll-none p-6"
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
+                {boardData.columns.map((col, col_idx) => (
+                  // column
+                  <Draggable draggableId={col.id} index={col_idx} key={col.id}>
+                    {(provided) => {
+                      return (
+                        <div
+                          className=" flex w-80 shrink-0 flex-col"
+                          {...provided.draggableProps}
+                          ref={provided.innerRef}
+                        >
+                          <div
                             {...provided.dragHandleProps}
-                            ref={provided.innerRef}
-                            className="cursor-pointer shadow-md"
-                            onClick={() => {
-                              setTaskDialogData(task);
-                              onToggleTask();
-                            }}
+                            className="mx-3 flex cursor-grab gap-3"
                           >
-                            <CardHeader>
-                              <CardTitle>{task.title}</CardTitle>
-                              <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
-                            </CardHeader>
-                          </Card>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          ))}
+                            <div
+                              className={`h-5 w-5  rounded-full`}
+                              style={{ backgroundColor: `#${col.color}` }}
+                            />
+                            <p className="heading-sm mt-0.5  uppercase">{`${col.title} (${col.tasks.length})`}</p>
+                          </div>
+                          <Droppable droppableId={col.id} type="task">
+                            {(provided) => (
+                              <div
+                                className="mx-3 mt-2 flex h-full flex-col"
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                              >
+                                {col.tasks.map((task, index) => (
+                                  <Draggable
+                                    draggableId={task.id}
+                                    index={index}
+                                    key={task.id}
+                                  >
+                                    {(provided) => (
+                                      <Card
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        ref={provided.innerRef}
+                                        className="mt-5 cursor-pointer shadow-md"
+                                        onClick={() => {
+                                          setTaskDialogData(task);
+                                          onToggleTask();
+                                        }}
+                                      >
+                                        <CardHeader>
+                                          <CardTitle>{task.title}</CardTitle>
+                                          <CardDescription>{`${task.subtasks.length} subtasks`}</CardDescription>
+                                        </CardHeader>
+                                      </Card>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        </div>
+                      );
+                    }}
+                  </Draggable>
+                ))}
 
-          <Card
-            onClick={() => {
-              onToggleColumn();
-            }}
-            className="mt-11 flex h-[90%]
-           cursor-pointer items-center justify-center bg-[#E9EFFA]"
-          >
-            <h1 className="heading-lg w-72 text-center text-medgray">
-              + Add Column
-            </h1>
-          </Card>
-          <CreateColumnDialog
-            isOpen={isOpenColumn}
-            onToggle={onToggleColumn}
-            boardId={data.id}
-          />
-          <CreateTaskDialog
-            isOpen={isOpenCreateTask}
-            onToggle={onToggleCreateTask}
-            boardData={data}
-          />
-          <TaskDialog
-            isOpen={isOpenTask}
-            onToggle={onToggleTask}
-            task={taskDialogData}
-            columns={data.columns.map((col) => ({
-              id: col.id,
-              title: col.title,
-            }))}
-          />
-          <EditBoardDialog
-            key={dialogKey}
-            isOpen={isOpenEditBoard}
-            onToggle={onToggleEditBoard}
-            board={data}
-            setKey={setDialogKey}
-          />
-        </div>
+                {/* <Card
+                  onClick={() => {
+                    onToggleColumn();
+                  }}
+                  className="mt-11 flex h-[90%]
+                  cursor-pointer items-center justify-center bg-[#E9EFFA]"
+                >
+                  <h1 className="heading-lg w-72 text-center text-medgray">
+                    + Add Column
+                  </h1>
+                </Card> */}
+                {provided.placeholder}
+                <CreateColumnDialog
+                  isOpen={isOpenColumn}
+                  onToggle={onToggleColumn}
+                  boardId={boardData.id}
+                />
+                <CreateTaskDialog
+                  isOpen={isOpenCreateTask}
+                  onToggle={onToggleCreateTask}
+                  boardData={boardData}
+                />
+                <TaskDialog
+                  isOpen={isOpenTask}
+                  onToggle={onToggleTask}
+                  task={taskDialogData}
+                  columns={boardData.columns.map((col) => ({
+                    id: col.id,
+                    title: col.title,
+                  }))}
+                />
+                <EditBoardDialog
+                  key={dialogKey}
+                  isOpen={isOpenEditBoard}
+                  onToggle={onToggleEditBoard}
+                  board={boardData}
+                  setKey={setDialogKey}
+                />
+              </div>
+            );
+          }}
+        </Droppable>
       </DragDropContext>
     </div>
   );

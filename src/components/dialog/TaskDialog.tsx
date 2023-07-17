@@ -60,16 +60,6 @@ export const TaskDialog: React.FC<Props> = ({
         console.log(err);
       },
     });
-  // const { mutate: deleteTask, isLoading: isLoadingDeleteTask } =
-  //   api.board.deleteTask.useMutation({
-  //     onSuccess: () => {
-  //       void ctx.board.getBoardById.invalidate();
-  //       onToggle();
-  //     },
-  //     onError: (err) => {
-  //       console.log(err);
-  //     },
-  //   });
 
   return (
     <Dialog open={isOpen} onOpenChange={onToggle}>
@@ -79,7 +69,6 @@ export const TaskDialog: React.FC<Props> = ({
             <DialogTitle className="heading-lg text-xl ">
               {task.title}
             </DialogTitle>
-            {task.order}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

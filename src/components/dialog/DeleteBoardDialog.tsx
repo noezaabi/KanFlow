@@ -19,12 +19,12 @@ export const DeleteBoardDialog: React.FC<Props> = ({
   const ctx = api.useContext();
   const router = useRouter();
   const { mutate: deleteBoard, isLoading } = api.board.deleteBoard.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       void ctx.board.getBoardById.invalidate();
       void ctx.board.getBoardByUserId.invalidate();
       onToggle();
       parentToggle();
-      router.replace("/dashboard");
+      await router.replace("/dashboard");
     },
     onError: (err) => {
       console.log(err);
