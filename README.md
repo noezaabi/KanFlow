@@ -57,8 +57,8 @@ To get a local copy up and running, follow these steps:
    yarn install
    ```
 
-4. **Setup the authentication and database: **
-   You can rename .env.example to .env and add your own auth and database url/passwords. You can check the following resources for more info on how to get those :
+4. **Setup the authentication and database **
+   \ You can rename .env.example to .env and add your own auth and database url/passwords. You can check the following resources for more info on how to get those :
    - https://www.prisma.io/docs/guides/database/supabase
    - https://next-auth.js.org/getting-started/example
    - https://next-auth.js.org/providers/google
