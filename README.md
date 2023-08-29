@@ -1,28 +1,96 @@
-# Create T3 App
+# KanFlow
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+![KanFlow Logo](kanflow.png)
 
-## What's next? How do I make an app with this?
+[Check the live demo](https://kanflow.nouh.dev)
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+KanFlow is a modern, feature-rich Kanban app designed for personal productivity. Built with the latest technologies including Next.js and the T3 Stack, it offers a range of features like authentication, CRUD operations, drag and drop, and theme switching.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Table of Contents
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+- [Contributing](#contributing)
+- [Upcoming Features](#upcoming-features)
+- [License](#license)
 
-## Learn More
+## Features
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- **Authentication**: Secure login using Google Auth.
+- **CRUD Operations**: Easily create, read, update, and delete tasks and subtasks.
+- **Drag and Drop**: Easily manage tasks and subtasks with drag and drop.
+- **Dark/Light Theme**: Toggle between dark and light modes for optimal user experience.
+- **Tasks/Subtasks**: Create tasks and subtasks to manage even the most complex projects.
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Technology Stack
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+KanFlow is built using a robust set of technologies:
 
-## How do I deploy this?
+- **Frontend**: Next.js, Tailwind CSS, Shadcn's UI Library
+- **Backend**: T3 Stack, TRPC, Prisma
+- **Database**: Supabase
+- **Authentication**: NextAuth, Google Auth
+- **Language**: TypeScript
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## Getting Started
+
+To get a local copy up and running, follow these steps:
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/your-username/KanFlow.git
+   ```
+
+2. **Navigate to the project directory**
+
+   ```bash
+   cd KanFlow
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+4. **Setup the authentication and database**
+   you can rename .env.example to .env and add your own auth and database url/passwords. You can check the following resources for more info on how to get those : https://www.prisma.io/docs/guides/database/supabase
+   https://next-auth.js.org/getting-started/example
+   https://next-auth.js.org/providers/google
+
+5. **Run the development server**
+
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+6. Open your browser and navigate to `http://localhost:3000`.
+
+## Contributing
+
+Contributions are what make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Upcoming Features
+
+- **Responsive Design**: I did not make the website responsive while developping it (I know that's bad). I'll try to work on this as soon as I find some time to do so.
+- **Stripe Integration**: I'd like to try to implement a SAAS like payment system where you would only have access to 2-3 Kanban before having to upgrade to a pro version. I might as well add this feature soon.
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+**Built with 💖 by [Noé Zaabi](https://nouh.dev)**
