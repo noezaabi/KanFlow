@@ -61,6 +61,7 @@ export const EditTaskDialog: React.FC<Props> = ({
       id: task.id,
       subtasks: task.subtasks,
       title: task.title,
+      order: task.order,
       description: task.description,
       columnId: task.columnId,
     },
@@ -71,6 +72,7 @@ export const EditTaskDialog: React.FC<Props> = ({
   });
 
   function onSubmit(values: z.infer<typeof updateTaskFormSchema>) {
+    console.log(values);
     editTask({
       task: {
         id: task.id,
@@ -97,7 +99,12 @@ export const EditTaskDialog: React.FC<Props> = ({
           <DialogTitle className="heading-lg">Edit Task</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (errors) =>
+              console.log(errors)
+            )}
+            className="space-y-5"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -169,7 +176,13 @@ export const EditTaskDialog: React.FC<Props> = ({
                 type="button"
                 variant="secondary"
                 className="mt-3 hover:bg-secondary"
-                onClick={() => append({ id: "NA", title: "", done: false })}
+                onClick={() =>
+                  append({
+                    id: "NA",
+                    title: "",
+                    done: false,
+                  })
+                }
               >
                 + Add New Subtask
               </Button>
