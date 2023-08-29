@@ -1,6 +1,6 @@
 # KanFlow
 
-![KanFlow Logo](kanflow.png)
+![KanFlow Logo](Kanflow.png)
 
 [Check the live demo](https://kanflow.nouh.dev)
 
